@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wordle</title>
+    <link rel="stylesheet" href="page.css">
+    <script src="app.js" charset="utf-8" defer></script>
+</head>
+<body class="wordle-page-body">
+    <h1 class="wordle-page-title">Wordle Игры</h1>
+    
+    <div class="games-container">
+        <!-- Виджет 1: Стандартные цвета (app.css по умолчанию) -->
+        <wordle-game 
+            id="wordle-standard">
+        </wordle-game>
+        
+        <!-- Виджет 2: Альтернативная тема (style.css) -->
+        <wordle-game 
+            id="wordle-custom-theme"
+            data-css="style.css"
+            data-disable-physical-keyboard>
+        </wordle-game>
+        
+        <!-- Виджет 3: Стандартная тема с кастомными цветами через атрибуты -->
+        <wordle-game 
+            id="wordle-dark-theme"
+            data-color-empty="#2c2c2c"
+            data-color-absent="#1a1a1a"
+            data-color-present="#ff6b6b"
+            data-color-correct="#4ecdc4"
+            data-disable-random>
+        </wordle-game>
+    </div>
+</body>
+</html>

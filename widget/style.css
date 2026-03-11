@@ -1,0 +1,264 @@
+.widget {
+    width: 550px;
+    height: 930px;
+    background-color: #1a1a2e;
+    position: relative;
+    font-family: 'Courier New', monospace;
+    border-radius: 12px;
+    transition: box-shadow 0.2s ease;
+}
+
+.widget-wrapper {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+.top-buttons {
+    position: absolute;
+    top: 40px;
+    left: 55px;
+    width: 440px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.top-btn {
+    width: 150px;
+    height: 40px;
+    background-color: #16213e;
+    color: #00ff41;
+    border: 2px solid #00ff41;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.top-btn:hover {
+    background-color: #00ff41;
+    color: #16213e;
+}
+
+.reset-btn {
+    width: 100px;
+    height: 40px;
+    background-color: #16213e;
+    color: #00ff41;
+    border: 2px solid #00ff41;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.reset-btn:hover {
+    background-color: #00ff41;
+    color: #16213e;
+}
+
+.game-board {
+    position: absolute;
+    top: 120px;
+    left: 55.75px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.row {
+    display: flex;
+    gap: 10px;
+}
+
+.tile {
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    font-weight: 700;
+    text-transform: uppercase;
+    border-radius: 8px;
+    color: #00ff41;
+}
+
+.correct {
+    background-color: #0f3460;
+    border: 2px solid #00ff41;
+}
+
+.present {
+    background-color: #533483;
+    border: 2px solid #e94560;
+}
+
+.absent {
+    background-color: #16213e;
+    border: 2px solid #555;
+}
+
+.empty {
+    background-color: #0f3460;
+    border: 2px solid #00ff41;
+    color: #00ff41;
+}
+
+.keyboard {
+    position: absolute;
+    bottom: 30px;
+    left: 25px;
+    width: 500px;
+    height: 200px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.keyboard-row {
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+}
+
+.key {
+    height: 60px;
+    background-color: #16213e;
+    color: #00ff41;
+    border: 1px solid #00ff41;
+    border-radius: 6px;
+    font-size: 28px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.1s;
+}
+
+.key:hover {
+    background-color: #00ff41;
+    color: #16213e;
+}
+
+.wide {
+    width: 56.75px !important;
+}
+
+.top .key {
+    width: 35px;
+}
+
+.middle .key {
+    width: 39px;
+}
+
+.bottom .key {
+    width: 35px;
+}
+
+.modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: transparent;   /* полностью прозрачный фон */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    border-radius: 12px;
+    pointer-events: none;   /* клики проходят сквозь overlay */
+}
+
+.modal {
+    background-color: #1a1a2e;
+    border: 2px solid #00ff41;
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 4px 20px rgba(0, 255, 65, 0.3);
+    min-width: 400px;
+    pointer-events: auto;   /* но не сквозь само модальное окно */
+}
+
+.modal-title {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    text-align: center;
+    color: #00ff41;
+}
+
+.modal-input {
+    width: 100%;
+    height: 50px;
+    background-color: #0f3460;
+    border: 2px solid #00ff41;
+    color: #00ff41;
+    border-radius: 8px;
+    padding: 0 15px;
+    font-size: 20px;
+    text-transform: uppercase;
+    text-align: center;
+    margin-bottom: 20px;
+    font-weight: 600;
+    box-sizing: border-box;
+}
+
+.modal-input:focus {
+    outline: none;
+    border-color: #00ff41;
+    box-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
+}
+
+.error {
+    border-color: #e94560;
+}
+
+.modal-error {
+    color: #e94560;
+    font-size: 14px;
+    margin-bottom: 15px;
+    text-align: center;
+    min-height: 20px;
+}
+
+.modal-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.modal-btn {
+    flex: 1;
+    height: 45px;
+    border: 2px solid #00ff41;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    pointer-events: auto;
+}
+
+.modal-btn-primary {
+    background-color: #16213e;
+    color: #00ff41;
+}
+
+.modal-btn-primary:hover {
+    background-color: #00ff41;
+    color: #16213e;
+}
+
+.modal-btn-secondary {
+    background-color: #0f3460;
+    color: #00ff41;
+}
+
+.modal-btn-secondary:hover {
+    background-color: #00ff41;
+    color: #16213e;
+}
