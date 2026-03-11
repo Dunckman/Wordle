@@ -10,9 +10,13 @@ class HTMLWordleElement extends HTMLElement {
         if (this.wordsLoaded) return true;
         
         try {
-            // запрос на получение файла со словами
-            const response_all = await fetch('five_letters_words.txt');
-            const response_guess = await fetch('guess_words.txt');
+            // определение пути к папке widget на основе местоположения скрипта
+            const isInsideWidgetFolder = window.location.pathname.includes('/widget/');
+            const basePath = isInsideWidgetFolder ? '' : 'widget/';
+            
+            // запрос на получение файлов со словами
+            const response_all = await fetch(`${basePath}five_letters_words.txt`);
+            const response_guess = await fetch(`${basePath}guess_words.txt`);
             
             const text_all = await response_all.text();   // чтение содержимого файла
             const text_guess = await response_guess.text();   // чтение содержимого файла
