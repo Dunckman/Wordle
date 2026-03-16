@@ -1,4 +1,4 @@
-// IIFE — немедленно вызываемое функциональное выражение
+// IIFE - немедленно вызываемое функциональное выражение
 (function() {
     // базовый "строитель" dom‑элементов
     function Elem(tagName, parentElem = null, attrs = null, textContent = null) {
@@ -221,11 +221,15 @@
         const classic_widget = document.createElement('wordle-game');
         classic_widget.id = "wordle-standard";
         classic_widget.dataset['css'] = 'widget/app.css';
+        classic_widget.dataset['pathGuessWords'] = 'widget/guess_words.txt';
+        classic_widget.dataset['pathCheckWords'] = 'widget/check_words.txt';
         
         const cS_wP_widget = document.createElement('wordle-game');
         cS_wP_widget.id = 'wordle-custom-theme';
         cS_wP_widget.dataset['css'] = 'widget/style.css';
         cS_wP_widget.dataset['disablePhysicalKeyboard'] = '';
+        cS_wP_widget.dataset['pathGuessWords'] = 'widget/guess_words.txt';
+        cS_wP_widget.dataset['pathCheckWords'] = 'widget/check_words.txt';
 
         const wR_widget = document.createElement('wordle-game');
         wR_widget.id = 'wordle-dark-theme';
@@ -235,6 +239,8 @@
         wR_widget.dataset['colorPresent'] = '#ff6b6b';
         wR_widget.dataset['colorCorrect'] = '#4ecdc4';
         wR_widget.dataset['disableRandom'] = '';
+        wR_widget.dataset['pathGuessWords'] = 'widget/guess_words.txt';
+        wR_widget.dataset['pathCheckWords'] = 'check_words.txt';
         
         widgets_block.append(classic_widget, cS_wP_widget, wR_widget);
         body.append(widgets_block);

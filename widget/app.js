@@ -3,26 +3,25 @@ class HTMLWordleElement extends HTMLElement {
     static activeWidget = null;   // флаг активности виджета
     static CHECK_WORDS_5 = [];   // массив всех пятибуквенных слов из словаря
     static GUESS_WORDS_5 = [];   // массив слов, которые могут быть загаданы (может быть таким же, как CHECK_WORDS_5 или его подмножеством)
+    static PATH_CHECK_WORDS = 'check_words.txt';   // путь к файлу со словами для проверки
+    static PATH_GUESS_WORDS = 'guess_words.txt';   // путь к файлу со словами для угадывания
     static wordsLoaded = false;   // флаг успешной загрузки словаря
+    static wordsCache = {};   // кэш загруженных словарей по пути: "checkPath|guessPath" -> {checkWords, guessWords}
 
-    // Загрузка словаря слов
+    // Загрузка словаря слов (статический метод для дефолтных путей - для обратной совместимости)
     static async loadWords() {
         if (this.wordsLoaded) return true;
         
-        try {
-            // определение пути к папке widget на основе местоположения скрипта
-            const isInsideWidgetFolder = window.location.pathname.includes('/widget/');
-            const basePath = isInsideWidgetFolder ? '' : 'widget/';
-            
+        try {            
             // запрос на получение файлов со словами
-            const response_all = await fetch(`${basePath}five_letters_words.txt`);
-            const response_guess = await fetch(`${basePath}guess_words.txt`);
+            const response_check = await fetch(this.PATH_CHECK_WORDS);
+            const response_guess = await fetch(this.PATH_GUESS_WORDS);
             
-            const text_all = await response_all.text();   // чтение содержимого файла
+            const text_check = await response_check.text();   // чтение содержимого файла
             const text_guess = await response_guess.text();   // чтение содержимого файла
-            
+
             // содержиоме файла -> массив слов
-            this.CHECK_WORDS_5 = text_all
+            this.CHECK_WORDS_5 = text_check
                 .split('\n')
                 .map(word => word.trim().toUpperCase())
                 .filter(word => word.length === 5);
@@ -41,27 +40,77 @@ class HTMLWordleElement extends HTMLElement {
         }
     }
 
+    // Загрузка словарей с указанными путями (для конкретного экземпляра контроллера)
+    static async loadWordsForWidget(pathCheckWords, pathGuessWords) {
+        const cacheKey = `${pathCheckWords}|${pathGuessWords}`;
+        
+        // если словари уже загружены, возвращаем их из кэша
+        if (this.wordsCache[cacheKey]) {
+            return this.wordsCache[cacheKey];
+        }
+        
+        try {
+            // запрос на получение файлов со словами
+            const response_check = await fetch(pathCheckWords);
+            const response_guess = await fetch(pathGuessWords);
+            
+            if (!response_check.ok || !response_guess.ok) {
+                throw new Error(`Failed to fetch: check=${response_check.status}, guess=${response_guess.status}`);
+            }
+            
+            const text_check = await response_check.text();
+            const text_guess = await response_guess.text();
+            
+            // содержимое файла -> массив слов
+            const CHECK_WORDS_5 = text_check
+                .split('\n')
+                .map(word => word.trim().toUpperCase())
+                .filter(word => word.length === 5);
+            
+            const GUESS_WORDS_5 = text_guess
+                .split('\n')
+                .map(word => word.trim().toUpperCase())
+                .filter(word => word.length === 5);
+            
+            const result = { CHECK_WORDS_5, GUESS_WORDS_5 };
+            
+            console.log(`Загружено всего ${CHECK_WORDS_5.length} слов для проверки и ${GUESS_WORDS_5.length} слов для угадывания`);
+            
+            // кэшируем результат
+            this.wordsCache[cacheKey] = result;
+            return result;
+        } catch (error) {
+            console.error('Ошибка загрузки словаря:', error);
+            return null;
+        }
+    }
+
     // Нормализация: приводит к верхнему регистру и заменяет Ё на Е
     static normalizeWord(word) {
         // это нужно, т.к. на клавиатуре виджета нет буквы Ё
         return word.toUpperCase().replace(/Ё/g, 'Е');
     }
 
-    // Проверка на наличие слова в словаре
-    static isValidWord(word) {
+    // Проверка на наличие слова в словаре (версия с передачей словарей)
+    static isValidWord(word, checkWords = null) {
         const normalized = this.normalizeWord(word);
-        return this.CHECK_WORDS_5.some(dictWord => this.normalizeWord(dictWord) === normalized);
+        // использовать переданный словарь или дефолтный статический
+        const dictionary = checkWords || this.CHECK_WORDS_5;
+        return dictionary.some(dictWord => this.normalizeWord(dictWord) === normalized);
     }
 
-    // Получение случайного слова из словаря
-    static getRandomWord() {
+    // Получение случайного слова из словаря (версия с передачей словарей)
+    static getRandomWord(guessWords = null) {
+        // использовать переданный словарь или дефолтный статический
+        const words = guessWords || this.GUESS_WORDS_5;
+        
         // если словарь не загружен, возвращаем дефолтное слово
-        if (this.GUESS_WORDS_5.length === 0) {
+        if (words.length === 0) {
             console.error('Словарь не загружен');
             return 'ВОРДЛ';
         }
         
-        return this.normalizeWord(this.GUESS_WORDS_5[Math.floor(Math.random() * this.GUESS_WORDS_5.length)]);
+        return this.normalizeWord(words[Math.floor(Math.random() * words.length)]);
     }
 
     // Конструктор класса
@@ -151,7 +200,7 @@ class HTMLWordleElement extends HTMLElement {
 
             // Преобразует плитку в другой тип (например, из пустой в правильную)
             transformTo(TileClass) {
-                const newTile = new TileClass(this.parent, this.letter);   // создаём новую плитку нужного типа
+                const newTile = new TileClass(this.parent, this.letter);
                 this.elem.replaceWith(newTile.elem);
                 return newTile;
             }
@@ -282,8 +331,9 @@ class HTMLWordleElement extends HTMLElement {
         // Класс игрового поля из 6 рядов
         class GameField {
             // Конструктор
-            constructor(parent, rowCount = 6, wordLength = 5) {
+            constructor(parent, controller, rowCount = 6, wordLength = 5) {
                 this.parent = parent;   // родительский элемент
+                this.controller = controller;   // ссылка на контроллер для доступа к словарям
                 this.rowCount = rowCount;   // количество рядов (попыток)
                 this.wordLength = wordLength;   // длина слова
                 this.rows = [];   // массив рядов
@@ -347,8 +397,8 @@ class HTMLWordleElement extends HTMLElement {
                     return { success: false, message: 'Недостаточно букв' };
                 }
 
-                // проверка, что слово есть в словаре
-                if (!HTMLWordleElement.isValidWord(word)) {
+                // проверка, что слово есть в словаре (используем словари контроллера)
+                if (!HTMLWordleElement.isValidWord(word, this.controller.checkWords)) {
                     return { success: false, message: 'Такого слова нет в словаре' };
                 }
 
@@ -584,9 +634,10 @@ class HTMLWordleElement extends HTMLElement {
         // Класс модального окна для ввода пользовательского слова
         class Modal {
             // Конструктор
-            constructor(keyboard, widgetWrapper) {
+            constructor(keyboard, widgetWrapper, controller) {
                 this.keyboard = keyboard;   // ссылка на клавиатуру виджета
                 this.widgetWrapper = widgetWrapper;   // контейнер виджета
+                this.controller = controller;   // ссылка на контроллер для доступа к словарям
                 this.container = null;   // контейнер модального окна
                 this.input = null;   // поле ввода
                 this.errorText = null;   // текст ошибки
@@ -652,7 +703,6 @@ class HTMLWordleElement extends HTMLElement {
 
                     // обработчик отмены
                     cancelBtn.onclick = () => {
-                        console.log('Нажата кнопка Отмена');
                         this.close();
                         reject(new Error('Cancelled'));
                     };
@@ -729,7 +779,7 @@ class HTMLWordleElement extends HTMLElement {
                     this.showError('Только русские буквы');
                     return false;
                 }
-                if (!HTMLWordleElement.isValidWord(word)) {
+                if (!HTMLWordleElement.isValidWord(word, this.controller.checkWords)) {
                     this.showError('Такого слова нет в словаре');
                     return false;
                 }
@@ -771,24 +821,30 @@ class HTMLWordleElement extends HTMLElement {
                 colorPresent: null,
                 colorCorrect: null,
                 disableRandomWord: false,
-                disablePhysicalKeyboard: false
+                disablePhysicalKeyboard: false,
+                pathCheckWords: 'check_words.txt',
+                pathGuessWords: 'guess_words.txt'
             },
+            checkWords: [],   // локальный массив слов для проверки (для этого виджета)
+            guessWords: [],   // локальный массив слов для угадывания (для этого виджета)
             gameField: null,   // игровое поле
             keyboard: null,   // клавиатура
 
             // Инициализация виджета: (словарь и загадывание)
             async init() {
-                // если словарь уже загружен, сразу загадываем слово
-                if (HTMLWordleElement.wordsLoaded) {
+                // загрузка словарей для этого конкретного экземпляра
+                const words = await HTMLWordleElement.loadWordsForWidget(
+                    this.settings.pathCheckWords,
+                    this.settings.pathGuessWords
+                );
+                
+                if (words) {
+                    this.checkWords = words.CHECK_WORDS_5;
+                    this.guessWords = words.GUESS_WORDS_5;
                     this.isReady = true;
-                    this.targetWord = HTMLWordleElement.getRandomWord();
+                    this.targetWord = HTMLWordleElement.getRandomWord(this.guessWords);
                 } else {
-                    // иначе загрузка словаря
-                    const loaded = await HTMLWordleElement.loadWords();
-                    if (loaded) {
-                        this.isReady = true;
-                        this.targetWord = HTMLWordleElement.getRandomWord();
-                    }
+                    console.error('Не удалось загрузить словари для виджета ' + this.element.id);
                 }
                 
                 // загрузка сохраняемого состояния из localStorage
@@ -843,7 +899,7 @@ class HTMLWordleElement extends HTMLElement {
                 topButtons.appendChild(customBtn);
 
                 // игровое поле
-                this.gameField = new GameField(container);
+                this.gameField = new GameField(container, this);
                 
                 // клавиатура
                 this.keyboard = new Keyboard(container, this.element.instanceId, this.settings.disablePhysicalKeyboard);
@@ -861,6 +917,10 @@ class HTMLWordleElement extends HTMLElement {
 
             // Загрузка настроек из data-атрибутов
             loadSettings() {
+                // загрузка путей к словарям из data-атрибутов
+                this.settings.pathCheckWords = this.element.dataset.pathCheckWords || 'check_words.txt';
+                this.settings.pathGuessWords = this.element.dataset.pathGuessWords || 'guess_words.txt';
+
                 this.settings.colorEmpty = this.element.dataset.colorEmpty || null;
                 this.settings.colorAbsent = this.element.dataset.colorAbsent || null;
                 this.settings.colorPresent = this.element.dataset.colorPresent || null;
@@ -1022,7 +1082,7 @@ class HTMLWordleElement extends HTMLElement {
                     return;
                 }
 
-                this.targetWord = HTMLWordleElement.getRandomWord();   // загадывание нового слова
+                this.targetWord = HTMLWordleElement.getRandomWord(this.guessWords);   // загадывание нового слова
                 this.gameField.reset();   // очистка поля
                 this.isGameOver = false;   // переключение флага окончания игры
                 
@@ -1042,7 +1102,7 @@ class HTMLWordleElement extends HTMLElement {
                     return;
                 }
 
-                this.targetWord = HTMLWordleElement.getRandomWord();   // загадывание нового слова
+                this.targetWord = HTMLWordleElement.getRandomWord(this.guessWords);   // загадывание нового слова
                 this.gameField.reset();   // очистка поля
                 this.isGameOver = false;   // переключение флага окончания игры
 
@@ -1059,8 +1119,8 @@ class HTMLWordleElement extends HTMLElement {
                     return;
                 }
 
-                // создаём модальное окно, передаём клавиатуру и wrapper
-                const modal = new Modal(this.keyboard, this.wrapper);
+                // создаём модальное окно, передаём клавиатуру, wrapper и контроллер
+                const modal = new Modal(this.keyboard, this.wrapper, this);
                 
                 try {
                     // ждём, пока пользователь введёт слово
